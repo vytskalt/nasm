@@ -334,9 +334,10 @@ pub fn build(b: *std.Build) void {
     }, &.{
         "-DHAVE_CONFIG_H",
         "-std=c17",
+        "-Wno-implicit-function-declaration",
     });
     exe.linkLibC();
-    exe.install();
+    b.installArtifact(exe);
 }
 
 fn have(c: bool) ?c_int {
