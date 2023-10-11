@@ -1,0 +1,23 @@
+.{
+    .name = "nasm",
+    .version = "2.16.1",
+    .paths = .{
+        "LICENSE",
+        "README.md",
+        "asm",
+        "build.zig",
+        "build.zig.zon",
+        "common",
+        "config",
+        "disasm",
+        "headers",
+        "include",
+        "macros",
+        "misc",
+        "nasmlib",
+        "output",
+        "perllib",
+        "stdlib",
+        "x86",
+    },
+}
