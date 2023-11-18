@@ -1,6 +1,6 @@
 .{
     .name = "nasm",
-    .version = "2.16.1-1",
+    .version = "2.16.1-2",
     .paths = .{
         "LICENSE",
         "README.md",

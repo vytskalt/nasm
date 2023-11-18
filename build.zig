@@ -1,4 +1,12 @@
 const std = @import("std");
+const builtin = @import("builtin");
+
+// Some versions when APIs changed
+const endian_rename = std.SemanticVersion.parse("0.12.0-dev.1377+3fc6fc681") catch unreachable;
+const c_source_files_api_change = std.SemanticVersion.parse("0.12.0-dev.878+7abf9b3a8") catch unreachable;
+
+const big_endian = if (builtin.zig_version.order(endian_rename).compare(.lt)) .Big else .big;
+const old_c_source_files_api = builtin.zig_version.order(c_source_files_api_change).compare(.lt);
 
 pub fn build(b: *std.Build) void {
     const target = b.standardTargetOptions(.{});
@@ -10,6 +18,7 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
     });
     const t = exe.target_info.target;
+
     exe.addIncludePath(.{ .path = "include" });
     exe.addIncludePath(.{ .path = "asm" });
     exe.addIncludePath(.{ .path = "x86" });
@@ -231,8 +240,8 @@ pub fn build(b: *std.Build) void {
         .__STDC_WANT_MATH_SPEC_FUNCS__ = 1,
         ._TANDEM_SOURCE = 1,
         ._XOPEN_SOURCE = null,
-        .WORDS_BIGENDIAN = have(t.cpu.arch.endian() == .big),
-        .WORDS_LITTLEENDIAN = have(t.cpu.arch.endian() == .little),
+        .WORDS_BIGENDIAN = have(t.cpu.arch.endian() == big_endian),
+        .WORDS_LITTLEENDIAN = have(t.cpu.arch.endian() != big_endian),
         ._FILE_OFFSET_BITS = null,
         ._LARGEFILE_SOURCE = null,
         ._LARGE_FILES = null,
@@ -245,100 +254,106 @@ pub fn build(b: *std.Build) void {
         .uintptr_t = null,
         .vsnprintf = null,
     }));
-    exe.addCSourceFiles(.{
-        .files = &.{
-            "nasmlib/alloc.c",
-            "nasmlib/asprintf.c",
-            "nasmlib/badenum.c",
-            "nasmlib/bsi.c",
-            "nasmlib/crc32.c",
-            "nasmlib/crc64.c",
-            "nasmlib/file.c",
-            "nasmlib/filename.c",
-            "nasmlib/hashtbl.c",
-            "nasmlib/ilog2.c",
-            "nasmlib/md5c.c",
-            "nasmlib/mmap.c",
-            "nasmlib/nctype.c",
-            "nasmlib/path.c",
-            "nasmlib/perfhash.c",
-            "nasmlib/raa.c",
-            "nasmlib/rbtree.c",
-            "nasmlib/readnum.c",
-            "nasmlib/realpath.c",
-            "nasmlib/rlimit.c",
-            "nasmlib/saa.c",
-            "nasmlib/string.c",
-            "nasmlib/strlist.c",
-            "nasmlib/ver.c",
-            "nasmlib/zerobuf.c",
+    const files = [_][]const u8{
+        "nasmlib/alloc.c",
+        "nasmlib/asprintf.c",
+        "nasmlib/badenum.c",
+        "nasmlib/bsi.c",
+        "nasmlib/crc32.c",
+        "nasmlib/crc64.c",
+        "nasmlib/file.c",
+        "nasmlib/filename.c",
+        "nasmlib/hashtbl.c",
+        "nasmlib/ilog2.c",
+        "nasmlib/md5c.c",
+        "nasmlib/mmap.c",
+        "nasmlib/nctype.c",
+        "nasmlib/path.c",
+        "nasmlib/perfhash.c",
+        "nasmlib/raa.c",
+        "nasmlib/rbtree.c",
+        "nasmlib/readnum.c",
+        "nasmlib/realpath.c",
+        "nasmlib/rlimit.c",
+        "nasmlib/saa.c",
+        "nasmlib/string.c",
+        "nasmlib/strlist.c",
+        "nasmlib/ver.c",
+        "nasmlib/zerobuf.c",
 
-            "asm/assemble.c",
-            "asm/directbl.c",
-            "asm/directiv.c",
-            "asm/error.c",
-            "asm/eval.c",
-            "asm/exprdump.c",
-            "asm/exprlib.c",
-            "asm/floats.c",
-            "asm/labels.c",
-            "asm/listing.c",
-            "asm/nasm.c",
-            "asm/parser.c",
-            "asm/pptok.c",
-            "asm/pragma.c",
-            "asm/preproc.c",
-            "asm/quote.c",
-            "asm/rdstrnum.c",
-            "asm/segalloc.c",
-            "asm/srcfile.c",
-            "asm/stdscan.c",
-            "asm/strfunc.c",
-            "asm/tokhash.c",
-            "asm/warnings.c",
+        "asm/assemble.c",
+        "asm/directbl.c",
+        "asm/directiv.c",
+        "asm/error.c",
+        "asm/eval.c",
+        "asm/exprdump.c",
+        "asm/exprlib.c",
+        "asm/floats.c",
+        "asm/labels.c",
+        "asm/listing.c",
+        "asm/nasm.c",
+        "asm/parser.c",
+        "asm/pptok.c",
+        "asm/pragma.c",
+        "asm/preproc.c",
+        "asm/quote.c",
+        "asm/rdstrnum.c",
+        "asm/segalloc.c",
+        "asm/srcfile.c",
+        "asm/stdscan.c",
+        "asm/strfunc.c",
+        "asm/tokhash.c",
+        "asm/warnings.c",
 
-            "stdlib/snprintf.c",
-            "stdlib/strlcpy.c",
-            "stdlib/strnlen.c",
-            "stdlib/strrchrnul.c",
-            "stdlib/vsnprintf.c",
+        "stdlib/snprintf.c",
+        "stdlib/strlcpy.c",
+        "stdlib/strnlen.c",
+        "stdlib/strrchrnul.c",
+        "stdlib/vsnprintf.c",
 
-            "x86/disp8.c",
-            "x86/iflag.c",
-            "x86/insnsa.c",
-            "x86/insnsb.c",
-            "x86/insnsd.c",
-            "x86/insnsn.c",
-            "x86/regflags.c",
-            "x86/regs.c",
-            "x86/regvals.c",
+        "x86/disp8.c",
+        "x86/iflag.c",
+        "x86/insnsa.c",
+        "x86/insnsb.c",
+        "x86/insnsd.c",
+        "x86/insnsn.c",
+        "x86/regflags.c",
+        "x86/regs.c",
+        "x86/regvals.c",
 
-            "common/common.c",
+        "common/common.c",
 
-            "macros/macros.c",
+        "macros/macros.c",
 
-            "output/codeview.c",
-            "output/legacy.c",
-            "output/nulldbg.c",
-            "output/nullout.c",
-            "output/outaout.c",
-            "output/outas86.c",
-            "output/outbin.c",
-            "output/outcoff.c",
-            "output/outdbg.c",
-            "output/outelf.c",
-            "output/outform.c",
-            "output/outieee.c",
-            "output/outlib.c",
-            "output/outmacho.c",
-            "output/outobj.c",
-        },
-        .flags = &.{
-            "-DHAVE_CONFIG_H",
-            "-std=c17",
-            "-Wno-implicit-function-declaration",
-        },
-    });
+        "output/codeview.c",
+        "output/legacy.c",
+        "output/nulldbg.c",
+        "output/nullout.c",
+        "output/outaout.c",
+        "output/outas86.c",
+        "output/outbin.c",
+        "output/outcoff.c",
+        "output/outdbg.c",
+        "output/outelf.c",
+        "output/outform.c",
+        "output/outieee.c",
+        "output/outlib.c",
+        "output/outmacho.c",
+        "output/outobj.c",
+    };
+    const flags = [_][]const u8{
+        "-DHAVE_CONFIG_H",
+        "-std=c17",
+        "-Wno-implicit-function-declaration",
+    };
+    if (old_c_source_files_api) {
+        exe.addCSourceFiles(&files, &flags);
+    } else {
+        exe.addCSourceFiles(.{
+            .files = &files,
+            .flags = &flags,
+        });
+    }
     exe.linkLibC();
     b.installArtifact(exe);
 }
