@@ -11,13 +11,13 @@ const old_c_source_files_api = builtin.zig_version.order(c_source_files_api_chan
 pub fn build(b: *std.Build) void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
+    const t = target.result;
 
     const exe = b.addExecutable(.{
         .name = "nasm",
         .target = target,
         .optimize = optimize,
     });
-    const t = exe.target_info.target;
 
     exe.addIncludePath(.{ .path = "include" });
     exe.addIncludePath(.{ .path = "asm" });
