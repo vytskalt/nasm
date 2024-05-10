@@ -1,13 +1,6 @@
 const std = @import("std");
 const builtin = @import("builtin");
 
-// Some versions when APIs changed
-const endian_rename = std.SemanticVersion.parse("0.12.0-dev.1377+3fc6fc681") catch unreachable;
-const c_source_files_api_change = std.SemanticVersion.parse("0.12.0-dev.878+7abf9b3a8") catch unreachable;
-
-const big_endian = if (builtin.zig_version.order(endian_rename).compare(.lt)) .Big else .big;
-const old_c_source_files_api = builtin.zig_version.order(c_source_files_api_change).compare(.lt);
-
 pub fn build(b: *std.Build) void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
@@ -240,8 +233,8 @@ pub fn build(b: *std.Build) void {
         .__STDC_WANT_MATH_SPEC_FUNCS__ = 1,
         ._TANDEM_SOURCE = 1,
         ._XOPEN_SOURCE = null,
-        .WORDS_BIGENDIAN = have(t.cpu.arch.endian() == big_endian),
-        .WORDS_LITTLEENDIAN = have(t.cpu.arch.endian() != big_endian),
+        .WORDS_BIGENDIAN = have(t.cpu.arch.endian() == .big),
+        .WORDS_LITTLEENDIAN = have(t.cpu.arch.endian() != .big),
         ._FILE_OFFSET_BITS = null,
         ._LARGEFILE_SOURCE = null,
         ._LARGE_FILES = null,
@@ -346,14 +339,10 @@ pub fn build(b: *std.Build) void {
         "-std=c17",
         "-Wno-implicit-function-declaration",
     };
-    if (old_c_source_files_api) {
-        exe.addCSourceFiles(&files, &flags);
-    } else {
-        exe.addCSourceFiles(.{
-            .files = &files,
-            .flags = &flags,
-        });
-    }
+    exe.addCSourceFiles(.{
+        .files = &files,
+        .flags = &flags,
+    });
     exe.linkLibC();
     b.installArtifact(exe);
 }
