@@ -12,10 +12,10 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
     });
 
-    exe.addIncludePath(.{ .path = "include" });
-    exe.addIncludePath(.{ .path = "asm" });
-    exe.addIncludePath(.{ .path = "x86" });
-    exe.addIncludePath(.{ .path = "output" });
+    exe.addIncludePath(b.path("include"));
+    exe.addIncludePath(b.path("asm"));
+    exe.addIncludePath(b.path("x86"));
+    exe.addIncludePath(b.path("output"));
     exe.addConfigHeader(b.addConfigHeader(.{
         .style = .blank,
         .include_path = "version.h",
@@ -28,7 +28,7 @@ pub fn build(b: *std.Build) void {
         .NASM_VER = "2.16.01",
     }));
     exe.addConfigHeader(b.addConfigHeader(.{
-        .style = .{ .autoconf = .{ .path = "config/config.h.in" } },
+        .style = .{ .autoconf = b.path("config/config.h.in") },
         .include_path = "config/config.h",
     }, .{
         .ABORT_ON_PANIC = have(optimize == .Debug),
