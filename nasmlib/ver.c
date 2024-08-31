@@ -36,7 +36,7 @@
 
 /* This is printed when entering nasm -v */
 const char nasm_version[] = NASM_VER;
-const char nasm_date[] = __DATE__;
+const char nasm_date[] = "";
 const char nasm_compile_options[] = ""
 #ifdef DEBUG
     " with -DDEBUG"
